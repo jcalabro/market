@@ -32,6 +32,20 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+var (
+	embeddingsHTTPClient = http.Client{
+		Timeout: 15 * time.Second,
+	}
+)
+
+func init() {
+	embeddingsHTTPClient.Timeout = 10 * time.Second
+	embeddingsHTTPClient.Transport.(*http.Transport).MaxConnsPerHost = 100
+	embeddingsHTTPClient.Transport.(*http.Transport).MaxIdleConnsPerHost = 100
+	embeddingsHTTPClient.Transport.(*http.Transport).MaxIdleConns = 100
+
+}
+
 type embStore struct {
 	db               *gorm.DB
 	pgxdb            *pgxpool.Pool
@@ -609,7 +623,7 @@ func (s *embStore) sendEmbeddingBatch(ctx context.Context, be embedBackendConfig
 		return err
 	}
 
-	req, err := http.NewRequest("POST", be.Host+"/admin/addPostEmbeddings", bytes.NewReader(b))
+	req, err := http.NewRequestWithContext(ctx, "POST", be.Host+"/admin/addPostEmbeddings", bytes.NewReader(b))
 	if err != nil {
 		return err
 	}
@@ -617,14 +631,14 @@ func (s *embStore) sendEmbeddingBatch(ctx context.Context, be embedBackendConfig
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+be.Key)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := embeddingsHTTPClient.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
+	bb, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != 200 {
-		bb, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("non-200 status code from post embedding updates: %d - %s", resp.StatusCode, string(bb))
 	}
 
