@@ -152,7 +152,8 @@ func main() {
 	}
 	app.Action = func(cctx *cli.Context) error {
 
-		db, err := cliutil.SetupDatabase(cctx.String("db-url"), cctx.Int("max-db-connections"))
+		// db, err := cliutil.SetupDatabase(cctx.String("db-url"), cctx.Int("max-db-connections"))
+		db, err := cliutil.SetupDatabase(cctx.String("db-url"), 10)
 		if err != nil {
 			return err
 		}
@@ -281,8 +282,8 @@ func main() {
 				return err
 			}
 
-			if cfg.MaxConns < 8 {
-				cfg.MaxConns = 8
+			if cfg.MaxConns < 32 {
+				cfg.MaxConns = 32
 			}
 
 			pool, err := pgxpool.NewWithConfig(context.TODO(), cfg)
