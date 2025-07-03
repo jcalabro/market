@@ -282,9 +282,9 @@ func main() {
 				return err
 			}
 
-			if cfg.MaxConns < 32 {
-				cfg.MaxConns = 32
-			}
+			// if cfg.MaxConns < 32 {
+			cfg.MaxConns = 64
+			// }
 
 			pool, err := pgxpool.NewWithConfig(context.TODO(), cfg)
 			if err != nil {
