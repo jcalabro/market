@@ -34,7 +34,8 @@ import (
 
 var (
 	embeddingsHTTPClient = http.Client{
-		Timeout: 15 * time.Second,
+		Timeout:   15 * time.Second,
+		Transport: http.DefaultTransport,
 	}
 )
 
